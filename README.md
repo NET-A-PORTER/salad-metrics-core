@@ -22,30 +22,30 @@ the method records the event (how long the event took), i.e. a Timer.
 
 Here is an example that times GET("/bob") and counts the number of requests to GET("/bob")
 
-   // Get the metrics spray routing aware directive factory
-   val factory: MetricsDirectiveFactory = MetricsDirectiveFactory()
+    // Get the metrics spray routing aware directive factory
+    val factory: MetricsDirectiveFactory = MetricsDirectiveFactory()
 
-   // Create a timer for timing GET("/bob") requests
-   val time = factory.timer("bobrequests").time
+    // Create a timer for timing GET("/bob") requests
+    val time = factory.timer("bobrequests").time
 
-   // Create a counter for counting GET("/bob") requests
-   val bobrequests = factory.counter("bobrequests").all.count
+    // Create a counter for counting GET("/bob") requests
+    val bobrequests = factory.counter("bobrequests").all.count
 
-   // Join the metrics together saying, I'm monitoring both the time and num of requests for GET("/bob")
-   val metrics = time & requestCounter
+    // Join the metrics together saying, I'm monitoring both the time and num of requests for GET("/bob")
+    val metrics = time & requestCounter
 
 
-   // use the metrics in your routing
+    // use the metrics in your routing
 
-   path("bob") {
-    get {
-        bobMetrics {
-            complete {
-                <h1>Say hello to spray</h1>
-            }
-        }
+    path("bob") {
+     get {
+         bobMetrics {
+             complete {
+                 <h1>Say hello to spray</h1>
+             }
+         }
+     }
     }
-   }
 
 
 ## Outputting the JSON metrics ##
