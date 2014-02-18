@@ -32,7 +32,7 @@ Here is an example that times GET("/bob") and counts the number of requests to G
     val bobrequests = factory.counter("bobrequests").all.count
 
     // Join the metrics together saying, I'm monitoring both the time and num of requests for GET("/bob")
-    val metrics = time & requestCounter
+    val bobMetrics = time & requestCounter
 
 
     // use the metrics in your routing
