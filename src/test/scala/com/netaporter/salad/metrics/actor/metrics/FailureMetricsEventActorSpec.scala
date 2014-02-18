@@ -18,9 +18,9 @@ import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
 class FailureMetricsEventActorSpec extends fixture.WordSpec with Matchers with ScalatestRouteTest with fixture.UnitFixture
     with ParallelTestExecution with HttpService with OptionValues {
   def actorRefFactory = system // connect the DSL to the test ActorSystem
-  def makeEventActor(factory: MetricsActorFactory, system: ActorSystem): ActorRef = factory.eventActor(system)
-  def makeAdminActor(factory: MetricsActorFactory, system: ActorSystem): ActorRef = factory.eventTellAdminActor(system)
-  def makeReturningAdminActor(factory: MetricsActorFactory, system: ActorSystem): ActorRef = factory.eventAskAdminActor(system)
+  def makeEventActor(factory: MetricsActorFactory)(implicit system: ActorSystem): ActorRef = factory.eventActor()
+  def makeAdminActor(factory: MetricsActorFactory)(implicit system: ActorSystem): ActorRef = factory.eventTellAdminActor()
+  def makeReturningAdminActor(factory: MetricsActorFactory)(implicit system: ActorSystem): ActorRef = factory.eventAskAdminActor()
 
   def rejectionRoute(metric: ActorRef, adminActor: ActorRef,
     timerName: String) = {
@@ -65,9 +65,9 @@ class FailureMetricsEventActorSpec extends fixture.WordSpec with Matchers with S
     "should capture rejections" in new ActorSys {
       val latch = new CountDownLatch(2);
       val factory = new AtomicCounterMetricsActoryFactory(latch)
-      val metricActor = makeEventActor(factory, system)
-      val adminActor = makeAdminActor(factory, system)
-      val returningStringActor = makeReturningAdminActor(factory, system)
+      val metricActor = makeEventActor(factory)
+      val adminActor = makeAdminActor(factory)
+      val returningStringActor = makeReturningAdminActor(factory)
 
       Get() ~> rejectionRoute(metricActor, adminActor, "mytimer1") ~> check {
         assert(rejection.getClass == classOf[ValidationRejection])
@@ -91,7 +91,6 @@ class FailureMetricsEventActorSpec extends fixture.WordSpec with Matchers with S
       expectMsgAllClassOf(Duration(1, TimeUnit.SECONDS), classOf[MetricsResponse]) foreach { msg =>
         msg match {
           case MetricsResponse(s: String) => {
-            System.out.println("STRING:::" + s)
 
             assert(s.contains("mytimer2"))
             assert(s.contains("mytimer1"))

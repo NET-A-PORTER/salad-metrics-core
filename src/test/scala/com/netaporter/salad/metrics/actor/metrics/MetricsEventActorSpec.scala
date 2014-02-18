@@ -13,6 +13,10 @@ import scala.concurrent.duration.Duration
 import java.util.concurrent.{ CountDownLatch, TimeUnit }
 import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
 import com.netaporter.salad.metrics.messages.MetricEventMessage.{ MeterEvent, NanoTimeEvent, IncCounterEvent, DecCounterEvent }
+import akka.testkit.TestActorRef
+import akka.pattern.ask
+import akka.util.Timeout
+import scala.concurrent.Await
 
 /**
  * Created by d.tootell@london.net-a-porter.com on 03/02/2014.
@@ -20,9 +24,9 @@ import com.netaporter.salad.metrics.messages.MetricEventMessage.{ MeterEvent, Na
 class MetricsEventActorSpec extends fixture.WordSpec with Matchers with ScalatestRouteTest with fixture.UnitFixture
     with ParallelTestExecution with HttpService with OptionValues {
   def actorRefFactory = system // connect the DSL to the test ActorSystem
-  def makeEventActor(factory: MetricsActorFactory, system: ActorSystem): ActorRef = factory.eventActor(system)
-  def makeAdminActor(factory: MetricsActorFactory, system: ActorSystem): ActorRef = factory.eventTellAdminActor(system)
-  def makeReturningAdminActor(factory: MetricsActorFactory, system: ActorSystem): ActorRef = factory.eventAskAdminActor(system)
+  def makeEventActor(factory: MetricsActorFactory): ActorRef = factory.eventActor()
+  def makeAdminActor(factory: MetricsActorFactory): ActorRef = factory.eventTellAdminActor()
+  def makeReturningAdminActor(factory: MetricsActorFactory): ActorRef = factory.eventAskAdminActor()
 
   def smallRoute(metric: ActorRef, adminActor: ActorRef,
     timerName: String = "allrequests") = {
@@ -61,9 +65,9 @@ class MetricsEventActorSpec extends fixture.WordSpec with Matchers with Scalates
     "record timer events and requests counts for /" in new ActorSys {
       val latch = new CountDownLatch(4);
       val factory = new AtomicCounterMetricsActoryFactory(latch)
-      val metricActor = makeEventActor(factory, system)
-      val adminActor = makeAdminActor(factory, system)
-      val returningStringActor = makeReturningAdminActor(factory, system)
+      val metricActor = makeEventActor(factory)
+      val adminActor = makeAdminActor(factory)
+      val returningStringActor = makeReturningAdminActor(factory)
 
       Get() ~> smallRoute(metricActor, adminActor, "mytimer1") ~> check {
         assert(responseAs[String].contains("counters"))
@@ -87,8 +91,6 @@ class MetricsEventActorSpec extends fixture.WordSpec with Matchers with Scalates
       expectMsgAllClassOf(Duration(1, TimeUnit.SECONDS), classOf[MetricsResponse]) foreach { msg =>
         msg match {
           case MetricsResponse(s: String) => {
-            System.out.println("STRING:::" + s)
-
             assert(s.contains("mytimer2"))
             assert(s.contains("mytimer1"))
             assert(s.contains("\"/.GET.successes\":{\"count\":2"))
@@ -104,9 +106,15 @@ class MetricsEventActorSpec extends fixture.WordSpec with Matchers with Scalates
     "record timer events and GET and POST requests counts for /bob" in new ActorSys {
       val latch = new CountDownLatch(4);
       val factory = new AtomicCounterMetricsActoryFactory(latch)
-      val metricActor = makeEventActor(factory, system)
-      val adminActor = makeAdminActor(factory, system)
-      val returningStringActor = makeReturningAdminActor(factory, system)
+      val metricActor = makeEventActor(factory)
+      val adminActor = makeAdminActor(factory)
+      val returningStringActor = makeReturningAdminActor(factory)
+
+      implicit val askTimeout = Timeout(10, TimeUnit.SECONDS)
+
+      val metricsStringFuture = returningStringActor ? MetricsRequest
+
+      val metricsString = Await.result(metricsStringFuture, askTimeout.duration).asInstanceOf[MetricsResponse]
 
       Get("/bob") ~> smallRoute(metricActor, adminActor) ~> check {
         assert(responseAs[String].contains("counters"))
@@ -130,7 +138,6 @@ class MetricsEventActorSpec extends fixture.WordSpec with Matchers with Scalates
       expectMsgAllClassOf(Duration(1, TimeUnit.SECONDS), classOf[MetricsResponse]) foreach { msg =>
         msg match {
           case MetricsResponse(s: String) => {
-            System.out.println("STRING:::" + s)
 
             assert(s.contains("\"/bob.GET.successes\":{\"count\":1"))
             assert(s.contains("\"/bob.POST.successes\":{\"count\":1"))

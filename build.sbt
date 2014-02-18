@@ -5,7 +5,7 @@ name := "salad-metrics-core"
 
 organization := "com.netaporter.salad"
 
-version := "0.1." + Properties.envOrElse("BUILD_NUMBER", "0")
+version := "0.1." + Properties.envOrElse("BUILD_NUMBER", "0") + "-SNAPSHOT"
 
 scalaVersion := "2.10.3"
 

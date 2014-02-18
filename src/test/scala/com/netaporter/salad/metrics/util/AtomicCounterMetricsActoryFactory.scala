@@ -10,15 +10,15 @@ import com.netaporter.salad.metrics.messages.MetricEventMessage.{ MeterEvent, Na
  * Created by d.tootell@london.net-a-porter.com on 06/02/2014.
  */
 class AtomicCounterMetricsActoryFactory(latch: CountDownLatch) extends MetricsActorFactory {
-  override def eventActor(system: ActorSystem): ActorRef = {
+  override def eventActor()(implicit system: ActorSystem): ActorRef = {
     system.actorOf(Props(new CounterMetricEventActor(latch) with YammerMetricsRegistry))
   }
 
-  override def eventTellAdminActor(system: ActorSystem): ActorRef = {
-    MetricsActorFactory.eventTellAdminActor(system)
+  override def eventTellAdminActor()(implicit system: ActorSystem): ActorRef = {
+    MetricsActorFactory.eventTellAdminActor()(system)
   }
-  override def eventAskAdminActor(system: ActorSystem): ActorRef = {
-    MetricsActorFactory.eventAskAdminActor(system)
+  override def eventAskAdminActor()(implicit system: ActorSystem): ActorRef = {
+    MetricsActorFactory.eventAskAdminActor()(system)
   }
 
   abstract class CounterMetricEventActor(val latch: CountDownLatch) extends MetricsEventActor {

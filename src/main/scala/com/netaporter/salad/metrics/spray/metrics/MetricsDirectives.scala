@@ -16,7 +16,7 @@
 
 package com.netaporter.salad.metrics.spray.metrics
 
-import akka.actor.ActorRef
+import akka.actor.{ ActorSystem, ActorRef }
 import spray.routing.Directive0
 
 import spray.routing.Rejected
@@ -26,6 +26,7 @@ import akka.actor.Status.Failure
 import spray.http.HttpResponse
 import com.netaporter.salad.metrics.messages.MetricEventMessage.IncCounterEvent
 import com.netaporter.salad.metrics.messages.MetricEventMessage.NanoTimeEvent
+import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
 
 /**
  * Provides helper methods for metrics.
@@ -149,8 +150,9 @@ sealed trait CounterBase {
 
 /**
  * Provides a builder that can provide a new [[spray.routing.Directive]], which
+ *
  * will count successful, failed, rejected or excepted operations in a given
- * [[spray.routing.Route]].
+ * [[spray.routing.Route]]
  *
  * The actual identifiers for this counter will be, given a specific
  * `prefix`:
@@ -371,6 +373,52 @@ case class TimerMetric(timerName: String, metricsEventActor: ActorRef) extends T
 }
 
 /**
+ * Provides a Timer metric that will record times on the timer under the name
+ * given.
+ *
+ * @constructor Create the timer metric with a specific name.
+ *
+ * @param metricsEventActor
+ *   The instance of an ActorRef to whcih we send the elapsed time of a event (nanos)
+ */
+case class TimerMetricByUri(metricsEventActor: ActorRef) extends TimerBase {
+  import com.netaporter.salad.metrics.spray.routing.directives.BasicDirectives._
+  import MetricHelpers._
+  /**
+   * This is the instance of the [[spray.routing.Directive]] that you can use in
+   * your [[spray.routing.Route]].
+   */
+  val time: Directive0 =
+    around { ctx ⇒
+      val startTime = System.nanoTime();
+      (ctx, buildAfter(metricName(ctx), startTime))
+    }
+}
+
+sealed trait BaseMeterMetric {
+  val metricsEventActor: ActorRef
+  /**
+   * The [[spray.routing.directives.BasicDirectives#around]] directive requires that the
+   * caller return a function that will process what happens <i>after</i> the
+   * specific [[spray.routing.Route]] completes.  This method builds that
+   * function.
+   *
+   * @param timerName
+   *   The name of the event
+   *
+   *
+   * @return
+   *   The function that will stop the timer on any result whatsoever.
+   */
+  def buildAfter(timerName: String): Any ⇒ Any = { possibleRsp: Any ⇒
+    possibleRsp match {
+      case _ ⇒
+        metricsEventActor ! MeterEvent(timerName)
+    }
+    possibleRsp
+  }
+}
+/**
  * Provides a Meter metric that will mark a specific event under a Meter of a
  * specific name.
  *
@@ -390,6 +438,40 @@ case class MeterMetric(meterName: String, metricsEventActor: ActorRef) {
   val meter: Directive0 = mapRequestContext { ctx ⇒
     metricsEventActor ! MeterEvent(meterName)
     ctx
+  }
+}
+
+/**
+ * Provides a Meter metric that will mark a specific event under a Meter of a
+ * specific name, when the request has completed and is being sent to the user
+ *
+ * @constructor Create the meter metric with a specific name.
+ * @param meterName
+ *   The name under which the meter exists.
+ * @param metricsEventActor
+ *   The instance of the Actor to which a Meter event should be sent
+ */
+case class MeterMetricOut(meterName: String, metricsEventActor: ActorRef) extends BaseMeterMetric {
+  import com.netaporter.salad.metrics.spray.routing.directives.BasicDirectives._
+
+  /**
+   * This is the instance of the [[spray.routing.Directive]] that you can use in
+   * your [[spray.routing.Route]].
+   */
+  val meter: Directive0 = around { ctx ⇒
+    (ctx, buildAfter(meterName))
+  }
+}
+
+case class MeterMetricByUri(metricsEventActor: ActorRef) extends BaseMeterMetric {
+  import com.netaporter.salad.metrics.spray.routing.directives.BasicDirectives._
+  import MetricHelpers._
+  /**
+   * This is the instance of the [[spray.routing.Directive]] that you can use in
+   * your [[spray.routing.Route]].
+   */
+  val meter: Directive0 = around { ctx ⇒
+    (ctx, buildAfter(metricName(ctx)))
   }
 }
 
@@ -460,6 +542,9 @@ case class MeterMetric(meterName: String, metricsEventActor: ActorRef) {
  * }}}
  */
 trait MetricsDirectiveFactory {
+
+  val defaultMetricsActorFactory: MetricsActorFactory
+
   // The instance of the MetricRegistry in which you want to store your metrics
   val metricsEventActor: ActorRef
 
@@ -498,15 +583,6 @@ trait MetricsDirectiveFactory {
   def counter: CounterMetricByUri = new CounterMetricByUri(metricsEventActor)
 
   /**
-   * Creates an instance of a [[CounterMetric]] that counts all types of events
-   * under an identifier unique to the path to the current route..
-   *
-   * @return
-   *   The instance of the [[CounterMetric]] you can use to count events.
-   */
-  //  def allCounter: CounterMetricByUri = new CounterMetricByUri(metricRegistry).all
-
-  /**
    * Creates an instance of a [[TimerMetric]] that measures events with a
    * specific name.
    *
@@ -525,7 +601,7 @@ trait MetricsDirectiveFactory {
    * @return
    *   The instance of the [[TimerMetric]] you can use to measure events.
    */
-  //  def timer: TimerMetricByUri = new TimerMetricByUri(metricRegistry)
+  def timer: TimerMetricByUri = new TimerMetricByUri(metricsEventActor)
 
   /**
    * Creates an instance of a [[MeterMetric]] that measures events with a
@@ -546,16 +622,19 @@ trait MetricsDirectiveFactory {
    * @return
    *   The instance of the [[MeterMetric]] you can use to measure events.
    */
-  //  def meter: MeterMetricByUri = new MeterMetricByUri(metricRegistry)
+  def meter: MeterMetricByUri = new MeterMetricByUri(metricsEventActor)
 }
 
 /**
  * Provides construction for an instance of the CodaHaleMetricsDirectiveFactory.
  */
 object MetricsDirectiveFactory {
+
   /**
-   * Constructs and instance of the CodaHaleMetricsDirectiveFactory around a
-   * specific instance of a MetricRegistry.
+   * Constructs an instance of the Metrics factory that sends metrics events to the
+   * given Actor.  The metrics event message are that of those found in
+   * {@link MetricEventMessage}
+   *
    *
    * @param actor
    *   The instance of the Actor that will be sent events to record
@@ -564,6 +643,17 @@ object MetricsDirectiveFactory {
    *   The instance of the CodaHaleMetricsDirectiveFactory to be used.
    */
   def apply(actor: ActorRef) = new MetricsDirectiveFactory {
-    val metricsEventActor = actor
+    override val defaultMetricsActorFactory = MetricsActorFactory
+    override val metricsEventActor = actor
+  }
+
+  /**
+   * Constructs an instance of the Metrics factory that send metrics to
+   * Yammer metrics actor.  That records metrics events using the yammer codehale
+   * metrics library.
+   */
+  def apply()(implicit system: ActorSystem) = new MetricsDirectiveFactory {
+    override val defaultMetricsActorFactory = MetricsActorFactory
+    override val metricsEventActor: ActorRef = defaultMetricsActorFactory.eventActor()
   }
 }

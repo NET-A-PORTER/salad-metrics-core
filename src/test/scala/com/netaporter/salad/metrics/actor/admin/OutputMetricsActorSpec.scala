@@ -14,7 +14,7 @@ import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
  */
 class OutputMetricsActorSpec extends RetrieveMetricsActorSpec with ScalatestRouteTest with HttpService with Matchers with OptionValues {
   def actorRefFactory = system // connect the DSL to the test ActorSystem
-  override def makeActor(system: ActorSystem): ActorRef = MetricsActorFactory.eventTellAdminActor(system)
+  override def makeActor()(implicit system: ActorSystem): ActorRef = MetricsActorFactory.eventTellAdminActor()(system)
 
   def smallRoute(ref: ActorRef) = {
     get {
@@ -28,7 +28,7 @@ class OutputMetricsActorSpec extends RetrieveMetricsActorSpec with ScalatestRout
 
   "Output Metrics Actor" should {
     "be able to send json results to RequestContext" in new ActorSys {
-      val actor = makeActor(system)
+      val actor = makeActor()
       Get() ~> smallRoute(actor) ~> check {
         assert(responseAs[String].contains("counters"))
       }
@@ -37,7 +37,7 @@ class OutputMetricsActorSpec extends RetrieveMetricsActorSpec with ScalatestRout
 
   "Output Metrics Actor" should {
     "be setting the response header to json" in new ActorSys {
-      val actor = makeActor(system)
+      val actor = makeActor()
       Get() ~> smallRoute(actor) ~> check {
         println(header("Content-Type"))
         //        assert((header("Content-Type")).isDefined)

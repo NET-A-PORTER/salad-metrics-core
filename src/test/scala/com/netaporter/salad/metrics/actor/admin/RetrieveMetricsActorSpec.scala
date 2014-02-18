@@ -16,7 +16,7 @@ import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
  */
 class RetrieveMetricsActorSpec extends fixture.WordSpec with Matchers with fixture.UnitFixture with ParallelTestExecution {
 
-  def makeActor(system: ActorSystem): ActorRef = MetricsActorFactory.eventAskAdminActor(system)
+  def makeActor()(implicit system: ActorSystem): ActorRef = MetricsActorFactory.eventAskAdminActor()(system)
 
   val mapper = new ObjectMapper();
 
@@ -35,7 +35,7 @@ class RetrieveMetricsActorSpec extends fixture.WordSpec with Matchers with fixtu
 
   "Retrieve Metrics Actor" should {
     "be able to handle MetricsRequest message" in new ActorSys {
-      val actor = makeActor(system)
+      val actor = makeActor()
 
       actor ! MetricsRequest
 
@@ -45,7 +45,7 @@ class RetrieveMetricsActorSpec extends fixture.WordSpec with Matchers with fixtu
 
   "Retrieve Metrics Actor" should {
     "return a metrics result that is valid json" in new ActorSys {
-      val actor = makeActor(system)
+      val actor = makeActor()
 
       actor ! MetricsRequest
 
@@ -67,7 +67,7 @@ class RetrieveMetricsActorSpec extends fixture.WordSpec with Matchers with fixtu
 
   "Retrieve Metrics Actor" should {
     "return a json body that contains timers, meters, counters and gauges" in new ActorSys {
-      val actor = makeActor(system)
+      val actor = makeActor()
 
       actor ! MetricsRequest
 
