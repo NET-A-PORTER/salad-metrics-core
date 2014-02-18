@@ -54,6 +54,12 @@ The codehale metrics library includes a metrics servlet:  (http://metrics.codaha
 As this metrics servlet is very java and servlet specific, a custom actor has be created that works with the MetricRegisty
 that the MetricsDirectiveFactory() is using.
 
+*note*
+Note the below is in no way a demonstration of how to do spring routing.  It's recommended that you put the metrics endpoint
+under /admin/metrics.  How you do that in your spray routing, is completely upto you.
+
+### I like Tell ###
+
     // get the admin actor that outputs the json
     val metricsOutputActor = factory.defaultMetricsActorFactory.eventTellAdminActor()
 
@@ -69,4 +75,23 @@ that the MetricsDirectiveFactory() is using.
       get {
           ctx => metricsOutputActor ! OutputMetrics(ctx)
       }
+    }
+
+
+
+### I like Ask ###
+
+    // get the admin actor that outputs the json
+    val metricsAskActor = factory.defaultMetricsActorFactory.eventAskAdminActor()
+
+    // The timeout for the ask.... this is something for you to decide.
+    implicit val askTimeout = Timeout(2000,TimeUnit.MILLISECONDS)
+
+    path("admin" / "metrics" / "ask") {
+        get {
+            onSuccess(metricsAskActor ? MetricsRequest) {
+              case MetricsResponse(json : String) =>
+                complete(OK,json)
+            }
+        }
     }

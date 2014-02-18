@@ -7,7 +7,7 @@ import com.netaporter.salad.metrics.util.ActorSys
 
 import org.scalatest.{ ParallelTestExecution, fixture, OptionValues, Matchers }
 import com.netaporter.salad.metrics.spray.metrics.MetricsDirectiveFactory
-import com.netaporter.salad.metrics.messages.MetricAdminMessage.{ MetricsResponse, MetricsRequest }
+import com.netaporter.salad.metrics.messages.MetricAdminMessage.{ MetricsRequest, MetricsResponse }
 import scala.concurrent.duration.Duration
 import java.util.concurrent.{ CountDownLatch, TimeUnit }
 import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
@@ -15,6 +15,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.Await
 import com.netaporter.salad.metrics.actor.admin.spray.OutputMetricsMessages.OutputMetrics
+import spray.http.StatusCodes.{ OK, NotFound }
 
 /**
  * Created by d.tootell@london.net-a-porter.com on 03/02/2014.
@@ -31,6 +32,9 @@ class MetricsExampleAdminEndpointSpec extends fixture.WordSpec with Matchers wit
     // get the admin actor that outputs the json
     val metricsOutputActor = factory.defaultMetricsActorFactory.eventTellAdminActor()
 
+    // get the admin actor that outputs the json
+    val metricsAskActor = factory.defaultMetricsActorFactory.eventAskAdminActor()
+
     // Create a timer for timing GET("/bob") requests
     val bobTimings = factory.timer("bobrequests").time
 
@@ -40,11 +44,21 @@ class MetricsExampleAdminEndpointSpec extends fixture.WordSpec with Matchers wit
     // Join the metrics together saying, I'm monitoring both the time and num of requests for GET("/bob")
     val bobMetrics = bobTimings & bobRequestsCounter
 
-    path("admin" / "metrics") {
+    implicit val askTimeout = Timeout(2000, TimeUnit.MILLISECONDS)
+
+    path("admin" / "metrics" / "ask") {
       get {
-        ctx => metricsOutputActor ! OutputMetrics(ctx)
+        onSuccess(metricsAskActor ? MetricsRequest) {
+          case MetricsResponse(json: String) =>
+            complete(OK, json)
+        }
       }
     } ~
+      path("admin" / "metrics") {
+        get {
+          ctx => metricsOutputActor ! OutputMetrics(ctx)
+        }
+      } ~
       path("bob") {
         get {
           bobMetrics {
@@ -85,6 +99,11 @@ class MetricsExampleAdminEndpointSpec extends fixture.WordSpec with Matchers wit
         responseBody should include regex "\"bobrequests.successes\":\\{\"count\":(1|2)"
       }
 
+      Get("/admin/metrics/ask") ~> smallRoute(factory) ~> check {
+        val responseBody = responseAs[String]
+        responseBody should include regex "timers\":\\{.*\"bobrequests\":\\{\"count\":(1|2)"
+        responseBody should include regex "\"bobrequests.successes\":\\{\"count\":(1|2)"
+      }
     }
   }
 
