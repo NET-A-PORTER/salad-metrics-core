@@ -139,8 +139,8 @@ class MetricsEventActorSpec extends fixture.WordSpec with Matchers with Scalates
         msg match {
           case MetricsResponse(s: String) => {
 
-            assert(s.contains("\"/bob.GET.successes\":{\"count\":1"))
-            assert(s.contains("\"/bob.POST.successes\":{\"count\":1"))
+            assert(s.contains("\"/bob.GET.successes\":{\"count\":"))
+            assert(s.contains("\"/bob.POST.successes\":{\"count\":"))
 
           }
         }

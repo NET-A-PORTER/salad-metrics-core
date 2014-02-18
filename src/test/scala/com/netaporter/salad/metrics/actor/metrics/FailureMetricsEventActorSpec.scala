@@ -27,6 +27,7 @@ class FailureMetricsEventActorSpec extends fixture.WordSpec with Matchers with S
     val factory = MetricsDirectiveFactory(metric)
     val time = factory.timer(timerName).time
     val requestCounter = factory.counterWithMethod("all").all.count
+    val request = factory.counter("bobrequests").all.count
 
     val metrics = time & requestCounter
 
