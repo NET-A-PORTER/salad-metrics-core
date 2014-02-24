@@ -15,6 +15,10 @@ that is responsible for recording the metric into the Yammer MetricsRegistry (ht
 
 ## Simple usage ##
 
+SBT users add the following dependency:
+
+    "com.netaporter.salad" %% "salad-metrics-core" % "0.2.0"
+
 The pull request https://github.com/spray/spray/pull/359 defines a set of spray routing aware metrics directives.
 These directives either record events as they come into the route (A counter), or wrap the current spray directive
 what could be considered kind of like an aspect.  The aspect is "around" the existing directive call and at the end of
