@@ -1,6 +1,6 @@
 # SALAD Metrics Core
 
-Contains shared metrics library code used by the LAD API and the Search API .
+[![Build Status](https://travis-ci.org/NET-A-PORTER/salad-metrics-core.png?branch=master)](https://travis-ci.org/NET-A-PORTER/salad-metrics-core)
 
 ## Implementation Overview ##
 
@@ -26,30 +26,32 @@ the method records the event (how long the event took), i.e. a Timer.
 
 Here is an example that times GET("/bob") and counts the number of requests to GET("/bob")
 
+```scala
     // Get the metrics spray routing aware directive factory
-    val factory: MetricsDirectiveFactory = MetricsDirectiveFactory()
+val factory: MetricsDirectiveFactory = MetricsDirectiveFactory()
 
-    // Create a timer for timing GET("/bob") requests
-    val time = factory.timer("bobrequests").time
+// Create a timer for timing GET("/bob") requests
+val time = factory.timer("bobrequests").time
 
-    // Create a counter for counting GET("/bob") requests
-    val bobrequests = factory.counter("bobrequests").all.count
+// Create a counter for counting GET("/bob") requests
+val bobrequests = factory.counter("bobrequests").all.count
 
-    // Join the metrics together saying, I'm monitoring both the time and num of requests for GET("/bob")
-    val bobMetrics = time & requestCounter
+// Join the metrics together saying, I'm monitoring both the time and num of requests for GET("/bob")
+val bobMetrics = time & requestCounter
 
 
-    // use the metrics in your routing
+// use the metrics in your routing
 
-    path("bob") {
-     get {
-         bobMetrics {
-             complete {
-                 <h1>Say hello to spray</h1>
-             }
+path("bob") {
+ get {
+     bobMetrics {
+         complete {
+             <h1>Say hello to spray</h1>
          }
      }
-    }
+  }
+}
+```
 
 
 ## Outputting the JSON metrics ##
@@ -64,38 +66,41 @@ under /admin/metrics.  How you do that in your spray routing, is completely upto
 
 ### I like Tell ###
 
-    // get the admin actor that outputs the json
-    val metricsOutputActor = factory.defaultMetricsActorFactory.eventTellAdminActor()
+```scala
+// get the admin actor that outputs the json
+val metricsOutputActor = factory.defaultMetricsActorFactory.eventTellAdminActor()
 
-    // Set a path to for handling ("/admin/metrics") that outputs json.
-    //
-    // {"version":"3.0.0","gauges":{},"counters":{"bobrequests.successes":{"count":1}},"histograms":{},"meters":{},
-    // "timers":{"bobrequests":{"count":1,"max":0.054916000000000006,"mean":0.054916000000000006,"min":0.054916000000000006,
-    // "p50":0.054916000000000006,"p75":0.054916000000000006,"p95":0.054916000000000006,"p98":0.054916000000000006,
-    // "p99":0.054916000000000006,"p999":0.054916000000000006,"stddev":0.0,"m15_rate":0.0,"m1_rate":0.0,"m5_rate":0.0,
-    // "mean_rate":4.291145650065655,"duration_units":"seconds","rate_units":"calls/second"}}}
+// Set a path to for handling ("/admin/metrics") that outputs json.
+//
+// {"version":"3.0.0","gauges":{},"counters":{"bobrequests.successes":{"count":1}},"histograms":{},"meters":{},
+// "timers":{"bobrequests":{"count":1,"max":0.054916000000000006,"mean":0.054916000000000006,"min":0.054916000000000006,
+// "p50":0.054916000000000006,"p75":0.054916000000000006,"p95":0.054916000000000006,"p98":0.054916000000000006,
+// "p99":0.054916000000000006,"p999":0.054916000000000006,"stddev":0.0,"m15_rate":0.0,"m1_rate":0.0,"m5_rate":0.0,
+// "mean_rate":4.291145650065655,"duration_units":"seconds","rate_units":"calls/second"}}}
 
-    path("admin" / "metrics") {
-      get {
-          ctx => metricsOutputActor ! OutputMetrics(ctx)
-      }
-    }
-
+path("admin" / "metrics") {
+  get {
+      ctx => metricsOutputActor ! OutputMetrics(ctx)
+  }
+}
+```
 
 
 ### I like Ask ###
 
-    // get the admin actor that outputs the json
-    val metricsAskActor = factory.defaultMetricsActorFactory.eventAskAdminActor()
+```scala
+// get the admin actor that outputs the json
+val metricsAskActor = factory.defaultMetricsActorFactory.eventAskAdminActor()
 
-    // The timeout for the ask.... this is something for you to decide.
-    implicit val askTimeout = Timeout(2000,TimeUnit.MILLISECONDS)
+// The timeout for the ask.... this is something for you to decide.
+implicit val askTimeout = Timeout(2000,TimeUnit.MILLISECONDS)
 
-    path("admin" / "metrics" / "ask") {
-        get {
-            onSuccess(metricsAskActor ? MetricsRequest) {
-              case MetricsResponse(json : String) =>
-                complete(OK,json)
-            }
+path("admin" / "metrics" / "ask") {
+    get {
+        onSuccess(metricsAskActor ? MetricsRequest) {
+          case MetricsResponse(json : String) =>
+            complete(OK,json)
         }
     }
+}
+```
