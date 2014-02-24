@@ -1,5 +1,6 @@
 package com.netaporter.salad.metrics.actor.admin
 
+import _root_.spray.http.ContentTypes
 import _root_.spray.routing.HttpService
 import _root_.spray.testkit.ScalatestRouteTest
 import akka.actor.{ ActorSystem, ActorRef }
@@ -41,9 +42,7 @@ class OutputMetricsActorSpec extends RetrieveMetricsActorSpec with ScalatestRout
       Get() ~> smallRoute(actor) ~> check {
         println(header("Content-Type"))
         //        assert((header("Content-Type")).isDefined)
-        header("Content-Type").value.value should include("application/json")
-        headers.count(_.name == "Content-Type") should equal(1)
-
+        entity.toOption.value.contentType should equal(ContentTypes.`application/json`)
       }
     }
   }
