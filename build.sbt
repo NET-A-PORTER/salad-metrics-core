@@ -11,10 +11,6 @@ scalaVersion := "2.10.3"
 
 scalacOptions ++= Seq("-feature")
 
-resolvers ++= 
-  ("NAP repo" at "http://artifactory.dave.net-a-porter.com:8081/artifactory/repo") ::
-  Nil
-
 val akka = "2.2.3"
 val spray = "1.2.0"
 val jackson = "2.2.2"
@@ -42,3 +38,36 @@ testOptions <+= (target in Test) map { t =>
 }
 
 publishTo := Some(Resolver.file("file", new File("target/publish")))
+
+publishTo <<= version { (v: String) =>
+  val nexus = "https://oss.sonatype.org/"
+  if (v.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
+
+pomExtra := (
+  <url>https://github.com/net-a-porter/scala-uri</url>
+    <licenses>
+      <license>
+        <name>Apache 2</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+        <distribution>repo</distribution>
+      </license>
+    </licenses>
+    <scm>
+      <url>git@github.com:net-a-porter/scala-uri.git</url>
+      <connection>scm:git@github.com:net-a-porter/scala-uri.git</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>dom</id>
+        <name>Dominic Tootell</name>
+      </developer>
+      <developer>
+        <id>theon</id>
+        <name>Ian Forsey</name>
+        <url>http://theon.github.io</url>
+      </developer>
+    </developers>)
