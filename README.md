@@ -99,7 +99,9 @@ path("admin" / "metrics" / "ask") {
     get {
         onSuccess(metricsAskActor ? MetricsRequest) {
           case MetricsResponse(json : String) =>
-            complete(OK,json)
+            respondWithHeader (`Cache-Control`(`must-revalidate`, `no-store`, `no-cache`)) {
+              complete(OK, json)
+            }
         }
     }
 }

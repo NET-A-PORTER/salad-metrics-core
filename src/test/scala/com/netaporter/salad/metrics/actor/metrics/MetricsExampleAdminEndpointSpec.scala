@@ -16,6 +16,8 @@ import akka.util.Timeout
 import scala.concurrent.Await
 import com.netaporter.salad.metrics.actor.admin.spray.OutputMetricsMessages.OutputMetrics
 import spray.http.StatusCodes.{ OK, NotFound }
+import spray.http.HttpHeaders.`Cache-Control`
+import spray.http.CacheDirectives.{ `no-cache`, `no-store`, `must-revalidate` }
 
 /**
  * Created by d.tootell@london.net-a-porter.com on 03/02/2014.
@@ -50,7 +52,9 @@ class MetricsExampleAdminEndpointSpec extends fixture.WordSpec with Matchers wit
       get {
         onSuccess(metricsAskActor ? MetricsRequest) {
           case MetricsResponse(json: String) =>
-            complete(OK, json)
+            respondWithHeader(`Cache-Control`(`must-revalidate`, `no-store`, `no-cache`)) {
+              complete(OK, json)
+            }
         }
       }
     } ~
@@ -100,9 +104,18 @@ class MetricsExampleAdminEndpointSpec extends fixture.WordSpec with Matchers wit
       }
 
       Get("/admin/metrics/ask") ~> smallRoute(factory) ~> check {
+
+        withClue("Cache-Control header should be present.") {
+          header("Cache-Control") should be('defined)
+        }
+
+        header("Cache-Control").value.value should include("must-revalidate")
+        header("Cache-Control").value.value should include("no-cache")
+        header("Cache-Control").value.value should include("no-store")
         val responseBody = responseAs[String]
         responseBody should include regex "timers\":\\{.*\"bobrequests\":\\{\"count\":(1|2)"
         responseBody should include regex "\"bobrequests.successes\":\\{\"count\":(1|2)"
+
       }
     }
   }

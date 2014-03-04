@@ -1,6 +1,7 @@
 package com.netaporter.salad.metrics.actor.admin
 
 import _root_.spray.http.ContentTypes
+import _root_.spray.http.HttpHeaders.`Cache-Control`
 import _root_.spray.routing.HttpService
 import _root_.spray.testkit.ScalatestRouteTest
 import akka.actor.{ ActorSystem, ActorRef }
@@ -43,6 +44,17 @@ class OutputMetricsActorSpec extends RetrieveMetricsActorSpec with ScalatestRout
         println(header("Content-Type"))
         //        assert((header("Content-Type")).isDefined)
         entity.toOption.value.contentType should equal(ContentTypes.`application/json`)
+
+        withClue("Cache-Control header should be present.") {
+          header("Cache-Control") should be('defined)
+        }
+
+        header("Cache-Control").value.value should include("must-revalidate")
+        header("Cache-Control").value.value should include("no-cache")
+        header("Cache-Control").value.value should include("no-store")
+
+        header("Cache-Control").value.value should not include ("no-storedasfls")
+
       }
     }
   }
