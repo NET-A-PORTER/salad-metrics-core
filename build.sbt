@@ -48,7 +48,7 @@ publishTo <<= version { (v: String) =>
 }
 
 pomExtra := (
-  <url>https://github.com/net-a-porter/scala-uri</url>
+  <url>https://github.com/net-a-porter/salad-metrics-core</url>
     <licenses>
       <license>
         <name>Apache 2</name>
@@ -57,8 +57,8 @@ pomExtra := (
       </license>
     </licenses>
     <scm>
-      <url>git@github.com:net-a-porter/scala-uri.git</url>
-      <connection>scm:git@github.com:net-a-porter/scala-uri.git</connection>
+      <url>git@github.com:net-a-porter/salad-metrics-core.git</url>
+      <connection>scm:git@github.com:net-a-porter/salad-metrics-core.git</connection>
     </scm>
     <developers>
       <developer>
