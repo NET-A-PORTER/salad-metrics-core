@@ -17,11 +17,12 @@ trait CacheMetrics {
   class MetricsCache[V](delegate: Cache[V], metricsName: String) extends Cache[V] {
 
     val total = new AtomicLong(0l)
-    val hits = new AtomicLong(0l)
+    val misses = new AtomicLong(0l)
+    def hits = total.longValue - misses.longValue
 
     def hitRatio =
       if (total.longValue == 0l) 0l
-      else hits.longValue.toDouble / total.longValue.toDouble
+      else hits.toDouble / total.longValue.toDouble
 
     eventActor ! GaugeEvent(metricsName, hitRatio _)
 
@@ -30,23 +31,14 @@ trait CacheMetrics {
      * function producing a `Future[V]`.
      */
     def apply(key: Any, genValue: () ⇒ Future[V])(implicit ec: ExecutionContext): Future[V] = {
-      var miss = false
+      total.incrementAndGet()
 
       val incOnMiss = () => {
-        miss = true
+        misses.incrementAndGet()
         genValue.apply()
       }
 
-      val res = delegate.apply(key, incOnMiss)
-
-      if (miss) {
-        total.incrementAndGet()
-      } else {
-        hits.incrementAndGet()
-        total.incrementAndGet()
-      }
-
-      res
+      delegate.apply(key, incOnMiss)
     }
 
     /**
@@ -54,13 +46,12 @@ trait CacheMetrics {
      * Returns None if the key has no corresponding cache entry.
      */
     def get(key: Any) = {
+      total.incrementAndGet()
+
       val res = delegate.get(key)
 
       if (res.isEmpty) {
-        total.incrementAndGet()
-      } else {
-        hits.incrementAndGet()
-        total.incrementAndGet()
+        misses.incrementAndGet()
       }
 
       res
