@@ -2,7 +2,7 @@ package com.netaporter.salad.metrics.util
 
 import java.util.concurrent.CountDownLatch
 import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
-import akka.actor.{ Props, ActorRef, ActorSystem }
+import akka.actor.{ Props, ActorRef, ActorRefFactory }
 import com.netaporter.salad.metrics.actor.metrics.{ MetricsEventActor, YammerMetricsRegistry }
 import com.netaporter.salad.metrics.messages.MetricEventMessage._
 import com.netaporter.salad.metrics.messages.MetricEventMessage.DecCounterEvent
@@ -14,15 +14,15 @@ import com.netaporter.salad.metrics.messages.MetricEventMessage.IncCounterEvent
  * Created by d.tootell@london.net-a-porter.com on 06/02/2014.
  */
 class AtomicCounterMetricsActoryFactory(latch: CountDownLatch) extends MetricsActorFactory {
-  override def eventActor()(implicit system: ActorSystem): ActorRef = {
-    system.actorOf(Props(new CounterMetricEventActor(latch) with YammerMetricsRegistry))
+  override def eventActor()(implicit factory: ActorRefFactory): ActorRef = {
+    factory.actorOf(Props(new CounterMetricEventActor(latch) with YammerMetricsRegistry))
   }
 
-  override def eventTellAdminActor()(implicit system: ActorSystem): ActorRef = {
-    MetricsActorFactory.eventTellAdminActor()(system)
+  override def eventTellAdminActor()(implicit factory: ActorRefFactory): ActorRef = {
+    MetricsActorFactory.eventTellAdminActor()(factory)
   }
-  override def eventAskAdminActor()(implicit system: ActorSystem): ActorRef = {
-    MetricsActorFactory.eventAskAdminActor()(system)
+  override def eventAskAdminActor()(implicit factory: ActorRefFactory): ActorRef = {
+    MetricsActorFactory.eventAskAdminActor()(factory)
   }
 
   abstract class CounterMetricEventActor(val latch: CountDownLatch) extends MetricsEventActor {

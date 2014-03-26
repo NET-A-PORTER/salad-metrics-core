@@ -10,7 +10,7 @@ import com.netaporter.salad.metrics.messages.MetricEventMessage.GaugeEvent
 trait CacheMetrics {
   this: Actor =>
 
-  protected val eventActor = MetricsActorFactory.eventActor()(context.system)
+  protected val eventActor = MetricsActorFactory.eventActor()(context)
 
   def cacheMetrics[V](delegate: Cache[V], metricsName: String): Cache[V] = new MetricsCache(delegate, metricsName)
 
