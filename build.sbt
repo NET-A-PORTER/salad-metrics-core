@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
     "com.codahale.metrics" % "metrics-json" % metrics,
     "com.fasterxml.jackson.core" % "jackson-databind" % jackson,
     "com.fasterxml.jackson.module" % "jackson-module-afterburner" % jackson,
+    "com.twitter" % "jsr166e" % "1.1.0",
     "io.spray" % "spray-routing" % spray,
     "io.spray" % "spray-caching" % spray,
     "io.spray" % "spray-testkit" % spray % "test",
