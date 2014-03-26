@@ -30,7 +30,8 @@ abstract class MetricsEventActor extends AbstractMetricsEventActor with MetricsR
     metricsRegistry.meter(message.metricname).mark()
   }
 
-  override def handleGaugeEvent(message: GaugeEvent[_]): Unit = {
-    metricsRegistry.register(message.metricname, message.toGauge)
+  override def handleGaugeEvent[T](message: GaugeEvent[T]): Unit = {
+    val gauge = new Gauge[T] { def getValue = message.takeReading() }
+    metricsRegistry.register(message.metricname, gauge)
   }
 }

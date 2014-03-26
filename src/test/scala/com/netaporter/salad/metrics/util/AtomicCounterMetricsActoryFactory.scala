@@ -46,7 +46,7 @@ class AtomicCounterMetricsActoryFactory(latch: CountDownLatch) extends MetricsAc
       super.handleMeterEvent(message)
     }
 
-    override def handleGaugeEvent(message: GaugeEvent[_]): Unit = {
+    override def handleGaugeEvent[T](message: GaugeEvent[T]): Unit = {
       latch.countDown()
       super.handleGaugeEvent(message)
     }

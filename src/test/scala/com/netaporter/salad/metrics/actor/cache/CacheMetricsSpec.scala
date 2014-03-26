@@ -27,8 +27,7 @@ class CacheMetricsSpec
     }
   })
 
-  val gaugeEvent = eventProbe.expectMsgType[GaugeEvent[Double]]
-  val gauge = gaugeEvent.toGauge
+  val gauge = eventProbe.expectMsgType[GaugeEvent[Double]]
 
   "CacheMetrics" should "start with hit ratio 0.0" in {
     cacheActor ! 'hitRatio
@@ -63,7 +62,7 @@ class CacheMetricsSpec
   }
 
   def expectHitRatio(expected: Double) {
-    val actual = gauge.getValue
+    val actual = gauge.takeReading()
     actual should equal(expected +- 0.01)
   }
 }

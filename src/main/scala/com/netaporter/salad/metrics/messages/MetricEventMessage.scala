@@ -14,7 +14,5 @@ object MetricEventMessage {
   case class DecCounterEvent(metricname: String) extends MetricEventMessage
   case class NanoTimeEvent(metricname: String, elapsedNanoTime: Long) extends MetricEventMessage
   case class MeterEvent(metricname: String) extends MetricEventMessage
-  case class GaugeEvent[T](metricname: String, value: () => T) extends MetricEventMessage {
-    def toGauge = new Gauge[T] { def getValue = value.apply }
-  }
+  case class GaugeEvent[T](metricname: String, takeReading: () => T) extends MetricEventMessage
 }

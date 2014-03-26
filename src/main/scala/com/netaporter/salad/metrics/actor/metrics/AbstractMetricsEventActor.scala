@@ -17,7 +17,7 @@ abstract trait AbstractMetricsEventActor extends Actor with ActorLogging {
   def handleDecCounter(message: DecCounterEvent)
   def handleTimerEvent(message: NanoTimeEvent)
   def handleMeterEvent(message: MeterEvent)
-  def handleGaugeEvent(message: GaugeEvent[_])
+  def handleGaugeEvent[T](message: GaugeEvent[T])
 
   def receive = {
     case m: IncCounterEvent => handleIncCounter(m)
