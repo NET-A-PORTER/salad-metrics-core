@@ -16,7 +16,7 @@
 
 package com.netaporter.salad.metrics.spray.metrics
 
-import akka.actor.{ ActorSystem, ActorRef }
+import akka.actor.{ ActorRefFactory, ActorSystem, ActorRef }
 import spray.routing.Directive0
 
 import spray.routing.Rejected
@@ -652,7 +652,7 @@ object MetricsDirectiveFactory {
    * Yammer metrics actor.  That records metrics events using the yammer codehale
    * metrics library.
    */
-  def apply()(implicit system: ActorSystem) = new MetricsDirectiveFactory {
+  def apply()(implicit factory: ActorRefFactory) = new MetricsDirectiveFactory {
     override val defaultMetricsActorFactory = MetricsActorFactory
     override val metricsEventActor: ActorRef = defaultMetricsActorFactory.eventActor()
   }
