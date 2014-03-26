@@ -4,7 +4,11 @@ import java.util.concurrent.CountDownLatch
 import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
 import akka.actor.{ Props, ActorRef, ActorSystem }
 import com.netaporter.salad.metrics.actor.metrics.{ MetricsEventActor, YammerMetricsRegistry }
-import com.netaporter.salad.metrics.messages.MetricEventMessage.{ MeterEvent, NanoTimeEvent, IncCounterEvent, DecCounterEvent }
+import com.netaporter.salad.metrics.messages.MetricEventMessage._
+import com.netaporter.salad.metrics.messages.MetricEventMessage.DecCounterEvent
+import com.netaporter.salad.metrics.messages.MetricEventMessage.NanoTimeEvent
+import com.netaporter.salad.metrics.messages.MetricEventMessage.MeterEvent
+import com.netaporter.salad.metrics.messages.MetricEventMessage.IncCounterEvent
 
 /**
  * Created by d.tootell@london.net-a-porter.com on 06/02/2014.
@@ -24,7 +28,7 @@ class AtomicCounterMetricsActoryFactory(latch: CountDownLatch) extends MetricsAc
   abstract class CounterMetricEventActor(val latch: CountDownLatch) extends MetricsEventActor {
     override def handleDecCounter(message: DecCounterEvent): Unit = {
       latch.countDown()
-      super.handleDecCounter(message);
+      super.handleDecCounter(message)
     }
 
     override def handleIncCounter(message: IncCounterEvent): Unit = {
@@ -40,6 +44,11 @@ class AtomicCounterMetricsActoryFactory(latch: CountDownLatch) extends MetricsAc
     override def handleMeterEvent(message: MeterEvent): Unit = {
       latch.countDown()
       super.handleMeterEvent(message)
+    }
+
+    override def handleGaugeEvent[T](message: GaugeEvent[T]): Unit = {
+      latch.countDown()
+      super.handleGaugeEvent(message)
     }
   }
 
