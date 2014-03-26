@@ -41,7 +41,6 @@ class OutputMetricsActorSpec extends RetrieveMetricsActorSpec with ScalatestRout
     "be setting the response header to json" in new ActorSys {
       val actor = makeActor()
       Get() ~> smallRoute(actor) ~> check {
-        println(header("Content-Type"))
         //        assert((header("Content-Type")).isDefined)
         entity.toOption.value.contentType should equal(ContentTypes.`application/json`)
 

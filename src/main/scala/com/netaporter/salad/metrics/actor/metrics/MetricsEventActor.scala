@@ -1,8 +1,12 @@
 package com.netaporter.salad.metrics.actor.metrics
 
-import com.netaporter.salad.metrics.messages.MetricEventMessage.{ MeterEvent, NanoTimeEvent, IncCounterEvent, DecCounterEvent }
-import com.codahale.metrics.{ Timer, MetricRegistry }
+import com.netaporter.salad.metrics.messages.MetricEventMessage._
+import com.codahale.metrics.{ Gauge, Timer, MetricRegistry }
 import java.util.concurrent.TimeUnit
+import com.netaporter.salad.metrics.messages.MetricEventMessage.DecCounterEvent
+import com.netaporter.salad.metrics.messages.MetricEventMessage.NanoTimeEvent
+import com.netaporter.salad.metrics.messages.MetricEventMessage.MeterEvent
+import com.netaporter.salad.metrics.messages.MetricEventMessage.IncCounterEvent
 
 /**
  * Created by d.tootell@london.net-a-porter.com on 05/02/2014.
@@ -24,5 +28,9 @@ abstract class MetricsEventActor extends AbstractMetricsEventActor with MetricsR
 
   override def handleMeterEvent(message: MeterEvent): Unit = {
     metricsRegistry.meter(message.metricname).mark()
+  }
+
+  override def handleGaugeEvent(message: GaugeEvent[_]): Unit = {
+    metricsRegistry.register(message.metricname, message.toGauge)
   }
 }
