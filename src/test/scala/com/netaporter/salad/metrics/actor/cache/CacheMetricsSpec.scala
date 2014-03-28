@@ -28,11 +28,11 @@ class CacheMetricsSpec
   })
 
   val hitRatioGauge = eventProbe.expectMsgType[GaugeEvent[Double]]
-  val usageGauge = eventProbe.expectMsgType[GaugeEvent[Double]]
+  val fillRatioGauge = eventProbe.expectMsgType[GaugeEvent[Double]]
 
   "CacheMetrics" should "name the caches correctly" in {
     hitRatioGauge.metricname should equal("test-cache.hit-ratio")
-    usageGauge.metricname should equal("test-cache.usage-percent")
+    fillRatioGauge.metricname should equal("test-cache.fill-ratio")
   }
 
   it should "start with hit ratio 0.0" in {
@@ -62,7 +62,7 @@ class CacheMetricsSpec
   }
 
   it should "start with usage percent of 0.0" in {
-    expectUsagePercent(0.0d)
+    expectFillRatio(0.0d)
   }
 
   it should "have the correct usage percent after a few requests" in {
@@ -70,23 +70,23 @@ class CacheMetricsSpec
 
     // Miss
     cacheActor ! 1
-    expectUsagePercent(0.2d)
+    expectFillRatio(0.2d)
 
     // Hit
     cacheActor ! 1
-    expectUsagePercent(0.2d)
+    expectFillRatio(0.2d)
 
     // Hit
     cacheActor ! 1
-    expectUsagePercent(0.2d)
+    expectFillRatio(0.2d)
 
     // Miss
     cacheActor ! 2
-    expectUsagePercent(0.4d)
+    expectFillRatio(0.4d)
 
     // Miss
     cacheActor ! 3
-    expectUsagePercent(0.6d)
+    expectFillRatio(0.6d)
   }
 
   def expectHitRatio(expected: Double) {
@@ -94,8 +94,8 @@ class CacheMetricsSpec
     actual should equal(expected +- 0.01)
   }
 
-  def expectUsagePercent(expected: Double) {
-    val actual = usageGauge.takeReading()
+  def expectFillRatio(expected: Double) {
+    val actual = fillRatioGauge.takeReading()
     actual should equal(expected +- 0.01)
   }
 }

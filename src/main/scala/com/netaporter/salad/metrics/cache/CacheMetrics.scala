@@ -33,11 +33,11 @@ trait CacheMetrics {
     /**
      * How full the cache is. Percentage between 0.0 and 1.0
      */
-    def usagePercent =
+    def fillRatio =
       delegate.size.toDouble / maxCapacity.toDouble
 
     eventActor ! GaugeEvent(metricsName + ".hit-ratio", hitRatio _)
-    eventActor ! GaugeEvent(metricsName + ".usage-percent", usagePercent _)
+    eventActor ! GaugeEvent(metricsName + ".fill-ratio", fillRatio _)
 
     /**
      * Returns either the cached Future for the given key or evaluates the given value generating
