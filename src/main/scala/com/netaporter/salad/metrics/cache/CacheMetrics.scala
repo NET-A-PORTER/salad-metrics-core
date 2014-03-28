@@ -1,8 +1,7 @@
 package com.netaporter.salad.metrics.cache
 
-import spray.caching.{ ExpiringLruCache, LruCache, Cache }
+import spray.caching.{ LruCache, Cache }
 import scala.concurrent.{ ExecutionContext, Future }
-import java.util.concurrent.atomic.AtomicLong
 import akka.actor.Actor
 import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
 import com.netaporter.salad.metrics.messages.MetricEventMessage.GaugeEvent
