@@ -1,7 +1,7 @@
 package com.netaporter.salad.metrics.actor.cache
 
-import akka.testkit.{ TestProbe, ImplicitSender, TestActorRef, TestKit }
-import akka.actor.{ Actor, ActorSystem }
+import akka.testkit._
+import akka.actor.{ ActorLogging, Actor, ActorSystem }
 import com.netaporter.salad.metrics.cache.CacheMetrics
 import spray.caching.LruCache
 import org.scalatest.{ OneInstancePerTest, Matchers, FlatSpecLike }
@@ -19,7 +19,7 @@ class CacheMetricsSpec
 
   val eventProbe = TestProbe()
 
-  val cacheActor = TestActorRef(new Actor with CacheMetrics {
+  val cacheActor = TestActorRef(new Actor with CacheMetrics with ActorLogging {
     override val eventActor = eventProbe.ref
     val cache = LruCacheWithMetrics[Int](metricsName = "test-cache", maxCapacity = 5, initialCapacity = 5)
     def receive = {
@@ -41,24 +41,34 @@ class CacheMetricsSpec
 
   it should "have the correct hit ratio after a few requests" in {
     // Miss
-    cacheActor ! 1
-    expectHitRatio(0.0d)
+    EventFilter.info(message = "cache-name=test-cache status=miss size=1 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 1
+      expectHitRatio(0.0d)
+    }
 
     // Hit
-    cacheActor ! 1
-    expectHitRatio(0.5d)
+    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 1
+      expectHitRatio(0.5d)
+    }
 
     // Hit
-    cacheActor ! 1
-    expectHitRatio(0.66d)
+    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 1
+      expectHitRatio(0.66d)
+    }
 
     // Hit
-    cacheActor ! 1
-    expectHitRatio(0.75d)
+    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 1
+      expectHitRatio(0.75d)
+    }
 
     // Miss
-    cacheActor ! 2
-    expectHitRatio(3d / 5d)
+    EventFilter.info(message = "cache-name=test-cache status=miss size=2 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 2
+      expectHitRatio(3d / 5d)
+    }
   }
 
   it should "start with usage percent of 0.0" in {
@@ -69,24 +79,34 @@ class CacheMetricsSpec
     //Max capacity is 5
 
     // Miss
-    cacheActor ! 1
-    expectFillRatio(0.2d)
+    EventFilter.info(message = "cache-name=test-cache status=miss size=1 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 1
+      expectFillRatio(0.2d)
+    }
 
     // Hit
-    cacheActor ! 1
-    expectFillRatio(0.2d)
+    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 1
+      expectFillRatio(0.2d)
+    }
 
     // Hit
-    cacheActor ! 1
-    expectFillRatio(0.2d)
+    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 1
+      expectFillRatio(0.2d)
+    }
 
     // Miss
-    cacheActor ! 2
-    expectFillRatio(0.4d)
+    EventFilter.info(message = "cache-name=test-cache status=miss size=2 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 2
+      expectFillRatio(0.4d)
+    }
 
     // Miss
-    cacheActor ! 3
-    expectFillRatio(0.6d)
+    EventFilter.info(message = "cache-name=test-cache status=miss size=3 max-capacity=5", occurrences = 1) intercept {
+      cacheActor ! 3
+      expectFillRatio(0.6d)
+    }
   }
 
   def expectHitRatio(expected: Double) {
