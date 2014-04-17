@@ -2,11 +2,12 @@ package com.netaporter.salad.metrics.cache
 
 import spray.caching.{ LruCache, Cache }
 import scala.concurrent.{ ExecutionContext, Future }
-import akka.actor.Actor
+import akka.actor.{ ActorLogging, Actor }
 import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
 import com.netaporter.salad.metrics.messages.MetricEventMessage.GaugeEvent
 import com.twitter.jsr166e.LongAdder
 import scala.concurrent.duration.Duration
+import akka.event.BusLogging
 
 trait CacheMetrics {
   this: Actor =>
@@ -21,6 +22,8 @@ trait CacheMetrics {
     new MetricsCache(LruCache(maxCapacity, initialCapacity, timeToLive, timeToIdle), metricsName, maxCapacity)
 
   class MetricsCache[V](delegate: Cache[V], metricsName: String, maxCapacity: Int) extends Cache[V] {
+
+    val log = new BusLogging(context.system.eventStream, "metrics", this.getClass())
 
     val total = new LongAdder
     val misses = new LongAdder
@@ -44,14 +47,18 @@ trait CacheMetrics {
      * function producing a `Future[V]`.
      */
     def apply(key: Any, genValue: () ⇒ Future[V])(implicit ec: ExecutionContext): Future[V] = {
+      var status = "hit"
       total.increment()
 
       val incOnMiss = () => {
+        status = "miss"
         misses.increment()
         genValue.apply()
       }
 
-      delegate.apply(key, incOnMiss)
+      val ret = delegate.apply(key, incOnMiss)
+      log.info(s"cache-name=$metricsName status=$status size=$size max-capacity=$maxCapacity")
+      ret
     }
 
     /**
