@@ -41,31 +41,31 @@ class CacheMetricsSpec
 
   it should "have the correct hit ratio after a few requests" in {
     // Miss
-    EventFilter.info(message = "cache-name=test-cache status=miss size=1 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=miss size=1 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 1
       expectHitRatio(0.0d)
     }
 
     // Hit
-    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 1
       expectHitRatio(0.5d)
     }
 
     // Hit
-    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 1
       expectHitRatio(0.66d)
     }
 
     // Hit
-    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 1
       expectHitRatio(0.75d)
     }
 
     // Miss
-    EventFilter.info(message = "cache-name=test-cache status=miss size=2 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=miss size=2 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 2
       expectHitRatio(3d / 5d)
     }
@@ -79,13 +79,13 @@ class CacheMetricsSpec
     //Max capacity is 5
 
     // Miss
-    EventFilter.info(message = "cache-name=test-cache status=miss size=1 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=miss size=1 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 1
       expectFillRatio(0.2d)
     }
 
     // Hit
-    EventFilter.info(message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=hit size=1 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 1
       expectFillRatio(0.2d)
     }
@@ -97,13 +97,13 @@ class CacheMetricsSpec
     }
 
     // Miss
-    EventFilter.info(message = "cache-name=test-cache status=miss size=2 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=miss size=2 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 2
       expectFillRatio(0.4d)
     }
 
     // Miss
-    EventFilter.info(message = "cache-name=test-cache status=miss size=3 max-capacity=5", occurrences = 1) intercept {
+    EventFilter.info(source = "metrics(akka://default)", message = "cache-name=test-cache status=miss size=3 max-capacity=5", occurrences = 1) intercept {
       cacheActor ! 3
       expectFillRatio(0.6d)
     }
