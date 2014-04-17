@@ -19,7 +19,7 @@ class CacheMetricsSpec
 
   val eventProbe = TestProbe()
 
-  val cacheActor = TestActorRef(new Actor with CacheMetrics with ActorLogging {
+  val cacheActor = TestActorRef(new Actor with CacheMetrics {
     override val eventActor = eventProbe.ref
     val cache = LruCacheWithMetrics[Int](metricsName = "test-cache", maxCapacity = 5, initialCapacity = 5)
     def receive = {

@@ -7,9 +7,10 @@ import com.netaporter.salad.metrics.actor.factory.MetricsActorFactory
 import com.netaporter.salad.metrics.messages.MetricEventMessage.GaugeEvent
 import com.twitter.jsr166e.LongAdder
 import scala.concurrent.duration.Duration
+import akka.event.BusLogging
 
 trait CacheMetrics {
-  this: Actor with ActorLogging =>
+  this: Actor =>
 
   protected val eventActor = MetricsActorFactory.eventActor()(context)
 
@@ -21,6 +22,8 @@ trait CacheMetrics {
     new MetricsCache(LruCache(maxCapacity, initialCapacity, timeToLive, timeToIdle), metricsName, maxCapacity)
 
   class MetricsCache[V](delegate: Cache[V], metricsName: String, maxCapacity: Int) extends Cache[V] {
+
+    val log = new BusLogging(context.system.eventStream, "metrics", this.getClass())
 
     val total = new LongAdder
     val misses = new LongAdder
