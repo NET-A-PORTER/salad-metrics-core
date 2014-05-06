@@ -595,6 +595,7 @@ trait MetricsDirectiveFactory {
    *   The instance of the [[TimerMetric]] you can use to measure events.
    */
   def timer(timerName: String): TimerMetric = new TimerMetric(timerName, metricsEventActor)
+  def timerWithMethod(timerName: String): TimerMetric = new TimerMetric(timerName, metricsEventActor, true)
 
   /**
    * Creates an instance of a [[TimerMetric]] that measures events with a
