@@ -23,7 +23,7 @@ abstract class RetrieveMetricsActor(val converter: MetricsToJsonConverter)
   // This timeout is just for resource cleanup.
   // Make sure it is 10% longer than spray can's request timeout.
   implicit val askTimeout = Timeout(
-    (configuration.getMilliseconds("spray.can.client.request-timeout") * 11) / 10, TimeUnit.MILLISECONDS)
+    configuration.getDuration("spray.can.client.request-timeout", TimeUnit.MILLISECONDS) * 11 / 10, TimeUnit.MILLISECONDS)
 
   // to be defined in subclassing actor
   def otherMetricsMessageHandler: Receive = {
