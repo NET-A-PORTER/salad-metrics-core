@@ -7,29 +7,30 @@ organization := "com.netaporter.salad"
 
 version := "0.2.6"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.2"
 
-scalacOptions ++= Seq("-feature")
+scalacOptions ++= Seq("-feature", "-deprecation")
 
-val akka = "2.2.3"
-val spray = "1.2.0"
+crossScalaVersions := Seq("2.10.3", "2.11.2")
+
+val akka = "2.3.4"
+val spray = "1.3.1"
 val jackson = "2.2.2"
 val metrics = "3.0.1"
 
 libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-actor" % akka,
     "com.codahale.metrics" % "metrics-core" % metrics,
     "com.codahale.metrics" % "metrics-json" % metrics,
     "com.fasterxml.jackson.core" % "jackson-databind" % jackson,
     "com.fasterxml.jackson.module" % "jackson-module-afterburner" % jackson,
     "com.twitter" % "jsr166e" % "1.1.0",
-    "io.spray" % "spray-routing" % spray,
-    "io.spray" % "spray-caching" % spray,
-    "io.spray" % "spray-testkit" % spray % "test",
-    "org.scalatest" %% "scalatest" % "2.0" % "test",
+    "com.typesafe.akka" %% "akka-actor" % akka,
     "com.typesafe.akka" %% "akka-testkit" % akka % "test",
-//    "com.chuusai" % "shapeless" % "2.0.0-M1" % "test" cross CrossVersion.full,
-    "org.specs2" %% "specs2-core" % "2.3.7" % "test"
+    "io.spray" %% "spray-caching" % spray,
+    "io.spray" %% "spray-routing" % spray,
+    "io.spray" %% "spray-testkit" % spray % "test",
+    "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+    "org.specs2" %% "specs2-core" % "2.3.13" % "test"
 )
 
 scalariformSettings
