@@ -17,10 +17,11 @@ trait CacheMetrics {
     maxCapacity: Int = 500,
     initialCapacity: Int = 16,
     timeToLive: Duration = Duration.Inf,
-    timeToIdle: Duration = Duration.Inf): Cache[V] =
-    new MetricsCache(LruCache(maxCapacity, initialCapacity, timeToLive, timeToIdle), metricsName, maxCapacity)
+    timeToIdle: Duration = Duration.Inf,
+    logMetrics: Boolean = true): Cache[V] =
+    new MetricsCache(LruCache(maxCapacity, initialCapacity, timeToLive, timeToIdle), metricsName, maxCapacity, logMetrics)
 
-  class MetricsCache[V](delegate: Cache[V], metricsName: String, maxCapacity: Int) extends Cache[V] {
+  class MetricsCache[V](delegate: Cache[V], metricsName: String, maxCapacity: Int, logMetrics: Boolean) extends Cache[V] {
 
     val log = akka.event.Logging(context.system, "metrics")
 
@@ -56,7 +57,11 @@ trait CacheMetrics {
       }
 
       val ret = delegate.apply(key, incOnMiss)
-      log.info(s"cache-name=$metricsName status=$status size=$size max-capacity=$maxCapacity")
+
+      if (logMetrics) {
+        log.info(s"cache-name=$metricsName status=$status size=$size max-capacity=$maxCapacity")
+      }
+
       ret
     }
 
