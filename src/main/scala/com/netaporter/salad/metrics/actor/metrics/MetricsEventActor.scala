@@ -14,7 +14,7 @@ import com.netaporter.salad.metrics.messages.MetricEventMessage.IncCounterEvent
 abstract class MetricsEventActor extends AbstractMetricsEventActor with MetricsRegistry[MetricRegistry] {
 
   override def handleDecCounter(message: DecCounterEvent): Unit = {
-    metricsRegistry.counter(message.metricname).inc()
+    metricsRegistry.counter(message.metricname).dec()
   }
 
   override def handleIncCounter(message: IncCounterEvent): Unit = {
