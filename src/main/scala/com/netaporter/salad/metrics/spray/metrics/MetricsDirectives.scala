@@ -358,8 +358,10 @@ sealed trait TimerBase {
  * @param metricsEventActor
  *   The instance of an ActorRef to whcih we send the elapsed time of a event (nanos)
  */
-case class TimerMetric(timerName: String, metricsEventActor: ActorRef) extends TimerBase {
+case class TimerMetric(timerName: String, metricsEventActor: ActorRef, includeMethod: Boolean = false) extends TimerBase {
   import com.netaporter.salad.metrics.spray.routing.directives.BasicDirectives._
+
+  import MetricHelpers._
 
   /**
    * This is the instance of the [[spray.routing.Directive]] that you can use in
@@ -368,7 +370,7 @@ case class TimerMetric(timerName: String, metricsEventActor: ActorRef) extends T
   val time: Directive0 =
     around { ctx ⇒
       val startTime = System.nanoTime();
-      (ctx, buildAfter(timerName, startTime))
+      (ctx, if (includeMethod) buildAfter(metricNameWithMethod(ctx, timerName), startTime) else buildAfter(timerName, startTime))
     }
 }
 
@@ -593,6 +595,7 @@ trait MetricsDirectiveFactory {
    *   The instance of the [[TimerMetric]] you can use to measure events.
    */
   def timer(timerName: String): TimerMetric = new TimerMetric(timerName, metricsEventActor)
+  def timerWithMethod(timerName: String): TimerMetric = new TimerMetric(timerName, metricsEventActor, true)
 
   /**
    * Creates an instance of a [[TimerMetric]] that measures events with a
