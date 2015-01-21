@@ -34,7 +34,7 @@ val factory: MetricsDirectiveFactory = MetricsDirectiveFactory()
 val time = factory.timer("bobrequests").time
 
 // Create a counter for counting GET("/bob") requests
-val bobrequests = factory.counter("bobrequests").all.count
+val requestCounter = factory.counter("bobrequests").all.count
 
 // Join the metrics together saying, I'm monitoring both the time and num of requests for GET("/bob")
 val bobMetrics = time & requestCounter
