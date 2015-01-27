@@ -5,7 +5,7 @@ name := "salad-metrics-core"
 
 organization := "com.netaporter.salad"
 
-version := "0.2.9-SNAPSHOT"
+version := "0.2.9"
 
 scalaVersion := "2.11.2"
 
@@ -14,7 +14,7 @@ scalacOptions ++= Seq("-feature", "-deprecation")
 crossScalaVersions := Seq("2.10.3", "2.11.2")
 
 val akka = "2.3.4"
-val spray = "1.3.1"
+val spray = "1.3.2"
 val jackson = "2.2.2"
 val metrics = "3.0.1"
 

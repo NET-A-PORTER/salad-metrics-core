@@ -87,5 +87,7 @@ trait CacheMetrics {
     def remove(key: Any) = delegate.remove(key)
     def clear() = delegate.clear()
     def size = delegate.size
+    def ascendingKeys(limit: Option[Int]): Iterator[Any] = delegate.ascendingKeys(limit)
+    def keys: Set[Any] = delegate.keys
   }
 }
